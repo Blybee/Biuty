@@ -13,3 +13,4 @@ export {
 export { Badge, type BadgeProps } from "./badge";
 export { Modal, type ModalProps } from "./modal";
 export { Spinner, type SpinnerProps } from "./spinner";
+export { Logo } from "./logo";

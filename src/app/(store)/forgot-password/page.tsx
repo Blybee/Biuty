@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Button, Input } from "@/shared/ui";
+import { Button, Input, Logo } from "@/shared/ui";
 import { useAuth } from "@/features/auth";
-import { Mail, Loader2, Leaf, ArrowLeft, CheckCircle } from "lucide-react";
+import { Mail, Loader2, ArrowLeft, CheckCircle } from "lucide-react";
 
 export default function ForgotPasswordPage() {
   const { sendPasswordReset, isLoading } = useAuth();
@@ -37,12 +37,7 @@ export default function ForgotPasswordPage() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2">
-            <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center">
-              <Leaf className="w-6 h-6 text-white" />
-            </div>
-            <span className="text-2xl font-bold text-forest">Biuty</span>
-          </Link>
+          <Logo size="lg" />
         </div>
 
         {isSuccess ? (

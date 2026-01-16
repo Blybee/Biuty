@@ -4,9 +4,9 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { Button, Input } from "@/shared/ui";
+import { Button, Input, Logo } from "@/shared/ui";
 import { useAuth } from "@/features/auth";
-import { Mail, Lock, Eye, EyeOff, Loader2, Leaf, User, Check } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, Loader2, User, Check } from "lucide-react";
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -150,12 +150,7 @@ export default function SignUpPage() {
         <div className="w-full max-w-md py-8">
           {/* Logo */}
           <div className="text-center mb-6">
-            <Link href="/" className="inline-flex items-center gap-2">
-              <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center">
-                <Leaf className="w-6 h-6 text-white" />
-              </div>
-              <span className="text-2xl font-bold text-forest">Biuty</span>
-            </Link>
+            <Logo size="lg" />
           </div>
 
           {/* Header */}

@@ -6,6 +6,7 @@ import { cn } from "@/shared/lib";
 import { useCart } from "@/features/cart";
 import { useAuth } from "@/features/auth";
 import { siteConfig } from "@/shared/config";
+import { Logo } from "@/shared/ui";
 import {
   ShoppingBag,
   Menu,
@@ -43,13 +44,7 @@ export function Header() {
       <div className="container-biuty">
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
-          <Link
-            href="/"
-            className="flex items-center gap-2 text-2xl font-display font-bold text-forest"
-          >
-            <span className="text-primary">●</span>
-            {siteConfig.name}
-          </Link>
+          <Logo size="md" />
 
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center gap-8">
