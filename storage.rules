@@ -1,0 +1,101 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // ==========================================
+    // FUNCIONES AUXILIARES
+    // ==========================================
+    
+    // Verifica si el usuario está autenticado
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Verifica si el archivo es una imagen válida
+    function isValidImage() {
+      return request.resource.contentType.matches('image/.*') &&
+        request.resource.size < 5 * 1024 * 1024; // Max 5MB
+    }
+    
+    // Verifica si el archivo es un documento válido
+    function isValidDocument() {
+      return request.resource.contentType.matches('application/pdf') &&
+        request.resource.size < 10 * 1024 * 1024; // Max 10MB
+    }
+
+    // ==========================================
+    // IMÁGENES DE PRODUCTOS
+    // ==========================================
+    match /products/{productId}/{fileName} {
+      // Cualquiera puede ver imágenes de productos
+      allow read: if true;
+      
+      // Solo usuarios autenticados pueden subir (admins en la práctica)
+      allow write: if isAuthenticated() && isValidImage();
+    }
+
+    // ==========================================
+    // IMÁGENES DE CATEGORÍAS
+    // ==========================================
+    match /categories/{categoryId}/{fileName} {
+      allow read: if true;
+      allow write: if isAuthenticated() && isValidImage();
+    }
+
+    // ==========================================
+    // IMÁGENES DE BLOG
+    // ==========================================
+    match /blog/{postId}/{fileName} {
+      allow read: if true;
+      allow write: if isAuthenticated() && isValidImage();
+    }
+
+    // ==========================================
+    // AVATARES DE USUARIOS
+    // ==========================================
+    match /users/{userId}/avatar/{fileName} {
+      // Cualquiera puede ver avatares
+      allow read: if true;
+      
+      // Solo el usuario puede subir su propio avatar
+      allow write: if isAuthenticated() && 
+        request.auth.uid == userId && 
+        isValidImage();
+    }
+
+    // ==========================================
+    // DOCUMENTOS DE ÓRDENES (facturas, etc.)
+    // ==========================================
+    match /orders/{orderId}/{fileName} {
+      // Solo el dueño de la orden o admins pueden acceder
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && isValidDocument();
+    }
+
+    // ==========================================
+    // IMÁGENES DEL SITIO (banners, hero, etc.)
+    // ==========================================
+    match /site/{fileName} {
+      allow read: if true;
+      allow write: if isAuthenticated() && isValidImage();
+    }
+
+    // ==========================================
+    // IMÁGENES DE RESEÑAS
+    // ==========================================
+    match /reviews/{reviewId}/{fileName} {
+      allow read: if true;
+      allow write: if isAuthenticated() && isValidImage();
+    }
+
+    // ==========================================
+    // CARPETA TEMPORAL PARA UPLOADS
+    // ==========================================
+    match /temp/{userId}/{fileName} {
+      allow read, write: if isAuthenticated() && 
+        request.auth.uid == userId && 
+        (isValidImage() || isValidDocument());
+    }
+  }
+}

@@ -172,3 +172,14 @@ Este proyecto está bajo la Licencia MIT.
 ---
 
 Desarrollado con 💚 por Biuty Team
+
+Cuando hice: npm install -g firebase-tools me salio esto:@powershell (2-4) 
+Ahora necesito que configures el firebase.json, el firestore rules y el storage rules
+{
+  "hosting": {
+    "site": "biuty",
+
+    "public": "public",
+    ...
+  }
+}

@@ -2,7 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { cn, formatPrice, formatDiscount, calculateDiscountedPrice } from "@/shared/lib";
+import { useRouter } from "next/navigation";
+import { cn, formatPrice, formatDiscount } from "@/shared/lib";
 import { Badge } from "@/shared/ui";
 import { useCart } from "@/features/cart";
 import type { ProductListItem } from "@/entities/product";
@@ -15,6 +16,7 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, className, priority = false }: ProductCardProps) {
+  const router = useRouter();
   const { addToCart, isInCart } = useCart();
   const hasDiscount = product.compareAtPrice && product.compareAtPrice > product.price;
   const discountPercent = hasDiscount
@@ -25,6 +27,18 @@ export function ProductCard({ product, className, priority = false }: ProductCar
     e.preventDefault();
     e.stopPropagation();
     addToCart(product);
+  };
+
+  const handleQuickView = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    router.push(`/product/${product.slug}`);
+  };
+
+  const handleFavorite = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // TODO: Implementar favoritos
   };
 
   return (
@@ -64,21 +78,22 @@ export function ProductCard({ product, className, priority = false }: ProductCar
           )}
         </div>
 
-        {/* Quick Actions */}
+        {/* Quick Actions - Usando buttons en lugar de Links para evitar anidamiento */}
         <div className="absolute top-3 right-3 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
           <button
+            onClick={handleFavorite}
             className="p-2 bg-white rounded-full shadow-md hover:bg-primary hover:text-white transition-colors"
             aria-label="Agregar a favoritos"
           >
             <Heart className="w-4 h-4" />
           </button>
-          <Link
-            href={`/product/${product.slug}`}
+          <button
+            onClick={handleQuickView}
             className="p-2 bg-white rounded-full shadow-md hover:bg-primary hover:text-white transition-colors"
             aria-label="Ver producto"
           >
             <Eye className="w-4 h-4" />
-          </Link>
+          </button>
         </div>
 
         {/* Add to Cart Button - Mobile visible, Desktop on hover */}

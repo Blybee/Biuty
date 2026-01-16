@@ -1,0 +1,188 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ==========================================
+    // FUNCIONES AUXILIARES
+    // ==========================================
+    
+    // Verifica si el usuario está autenticado
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Verifica si el usuario es el dueño del documento
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Verifica si el usuario es administrador
+    function isAdmin() {
+      return isAuthenticated() && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'super_admin'];
+    }
+    
+    // Verifica si el usuario es super admin
+    function isSuperAdmin() {
+      return isAuthenticated() && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'super_admin';
+    }
+
+    // ==========================================
+    // USUARIOS
+    // ==========================================
+    match /users/{userId} {
+      // Cualquiera autenticado puede leer su propio perfil
+      // Los admins pueden leer todos los perfiles
+      allow read: if isOwner(userId) || isAdmin();
+      
+      // Solo el usuario puede crear su propio perfil (durante el registro)
+      allow create: if isOwner(userId);
+      
+      // El usuario puede actualizar su perfil, pero no puede cambiar su rol
+      allow update: if isOwner(userId) && 
+        (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['role'])) ||
+        isAdmin();
+      
+      // Solo super admin puede eliminar usuarios
+      allow delete: if isSuperAdmin();
+    }
+
+    // ==========================================
+    // PRODUCTOS
+    // ==========================================
+    match /products/{productId} {
+      // Cualquiera puede leer productos (público)
+      allow read: if true;
+      
+      // Solo admins pueden crear, actualizar y eliminar productos
+      allow create, update, delete: if isAdmin();
+    }
+
+    // ==========================================
+    // CATEGORÍAS
+    // ==========================================
+    match /categories/{categoryId} {
+      // Cualquiera puede leer categorías (público)
+      allow read: if true;
+      
+      // Solo admins pueden gestionar categorías
+      allow create, update, delete: if isAdmin();
+    }
+
+    // ==========================================
+    // ÓRDENES/PEDIDOS
+    // ==========================================
+    match /orders/{orderId} {
+      // El usuario puede leer sus propias órdenes
+      // Los admins pueden leer todas las órdenes
+      allow read: if isAuthenticated() && 
+        (resource.data.userId == request.auth.uid || isAdmin());
+      
+      // Cualquier usuario autenticado puede crear una orden
+      allow create: if isAuthenticated() && 
+        request.resource.data.userId == request.auth.uid;
+      
+      // Solo admins pueden actualizar órdenes (cambiar estado, etc.)
+      allow update: if isAdmin();
+      
+      // Solo super admin puede eliminar órdenes
+      allow delete: if isSuperAdmin();
+    }
+
+    // ==========================================
+    // ITEMS DE ÓRDENES (si se usa subcolección)
+    // ==========================================
+    match /orders/{orderId}/items/{itemId} {
+      allow read: if isAuthenticated() && 
+        (get(/databases/$(database)/documents/orders/$(orderId)).data.userId == request.auth.uid || isAdmin());
+      allow write: if isAdmin();
+    }
+
+    // ==========================================
+    // BLOG POSTS
+    // ==========================================
+    match /blogPosts/{postId} {
+      // Cualquiera puede leer posts publicados
+      allow read: if resource.data.status == 'published' || isAdmin();
+      
+      // Solo admins pueden gestionar posts
+      allow create, update, delete: if isAdmin();
+    }
+
+    // ==========================================
+    // CARRITO (si se guarda en Firestore)
+    // ==========================================
+    match /carts/{userId} {
+      // Solo el dueño puede acceder a su carrito
+      allow read, write: if isOwner(userId);
+    }
+
+    // ==========================================
+    // FAVORITOS/WISHLIST
+    // ==========================================
+    match /wishlists/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    // ==========================================
+    // REVIEWS/RESEÑAS
+    // ==========================================
+    match /reviews/{reviewId} {
+      // Cualquiera puede leer reseñas aprobadas
+      allow read: if resource.data.status == 'approved' || isAdmin() ||
+        (isAuthenticated() && resource.data.userId == request.auth.uid);
+      
+      // Usuarios autenticados pueden crear reseñas
+      allow create: if isAuthenticated() && 
+        request.resource.data.userId == request.auth.uid;
+      
+      // El usuario puede editar su propia reseña
+      allow update: if isOwner(resource.data.userId) || isAdmin();
+      
+      // Solo admins pueden eliminar reseñas
+      allow delete: if isAdmin();
+    }
+
+    // ==========================================
+    // CONFIGURACIÓN DEL SITIO
+    // ==========================================
+    match /settings/{settingId} {
+      // Cualquiera puede leer configuraciones públicas
+      allow read: if true;
+      
+      // Solo super admin puede modificar configuraciones
+      allow write: if isSuperAdmin();
+    }
+
+    // ==========================================
+    // CUPONES/DESCUENTOS
+    // ==========================================
+    match /coupons/{couponId} {
+      // Los usuarios autenticados pueden leer cupones activos
+      allow read: if isAuthenticated() || isAdmin();
+      
+      // Solo admins pueden gestionar cupones
+      allow create, update, delete: if isAdmin();
+    }
+
+    // ==========================================
+    // DIRECCIONES DEL USUARIO
+    // ==========================================
+    match /users/{userId}/addresses/{addressId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    // ==========================================
+    // NOTIFICACIONES
+    // ==========================================
+    match /notifications/{notificationId} {
+      allow read: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+      allow update: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+      allow create, delete: if isAdmin();
+    }
+  }
+}

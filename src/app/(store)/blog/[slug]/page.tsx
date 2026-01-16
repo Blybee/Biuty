@@ -4,6 +4,18 @@ import { Badge } from "@/shared/ui";
 import { formatDate } from "@/shared/lib";
 import { Clock, User, ChevronLeft, Share2, Heart, Facebook, Twitter } from "lucide-react";
 
+// Genera los parámetros estáticos para export
+export async function generateStaticParams() {
+  // En producción: fetch desde Firebase/API
+  const slugs = [
+    "mejores-suplementos-masa-muscular",
+    "beneficios-miel-organica",
+    "rutina-fitness-principiantes",
+    "guia-alimentacion-saludable",
+  ];
+  return slugs.map((slug) => ({ slug }));
+}
+
 // Mock blog post detail
 const mockPost = {
   id: "1",
