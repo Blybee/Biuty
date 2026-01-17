@@ -1,101 +1,13 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, useEffect, Suspense, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { ProductGrid } from "@/widgets";
 import { Button, Badge, Input, Spinner } from "@/shared/ui";
 import { cn } from "@/shared/lib";
-import type { ProductListItem, ProductCategory } from "@/entities/product";
-import { Search, SlidersHorizontal, X, ChevronDown } from "lucide-react";
-
-// Mock data
-const mockProducts: ProductListItem[] = [
-  {
-    id: "1",
-    name: "Proteína Whey Premium",
-    slug: "proteina-whey-premium",
-    shortDescription: "Proteína de suero de alta calidad con 25g por porción",
-    category: "suplementos",
-    price: 149.90,
-    compareAtPrice: 189.90,
-    thumbnail: "https://images.unsplash.com/photo-1593095948071-474c5cc2989d?w=400",
-    stock: 50,
-    status: "active",
-    isFeatured: true,
-    isNewArrival: false,
-    isBestSeller: true,
-  },
-  {
-    id: "2",
-    name: "Miel de Abeja Pura",
-    slug: "miel-abeja-pura",
-    shortDescription: "Miel 100% natural de apicultores locales",
-    category: "naturales",
-    price: 35.90,
-    thumbnail: "https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=400",
-    stock: 100,
-    status: "active",
-    isFeatured: true,
-    isNewArrival: true,
-    isBestSeller: false,
-  },
-  {
-    id: "3",
-    name: "Creatina Monohidratada",
-    slug: "creatina-monohidratada",
-    shortDescription: "Creatina pura para mayor rendimiento y fuerza",
-    category: "fitness",
-    price: 89.90,
-    thumbnail: "https://images.unsplash.com/photo-1594381898411-846e7d193883?w=400",
-    stock: 30,
-    status: "active",
-    isFeatured: true,
-    isNewArrival: false,
-    isBestSeller: true,
-  },
-  {
-    id: "4",
-    name: "Algarrobina Natural",
-    slug: "algarrobina-natural",
-    shortDescription: "Energizante natural rico en hierro y calcio",
-    category: "naturales",
-    price: 28.90,
-    thumbnail: "https://images.unsplash.com/photo-1610725664285-7c57e6eeac3f?w=400",
-    stock: 75,
-    status: "active",
-    isFeatured: false,
-    isNewArrival: true,
-    isBestSeller: false,
-  },
-  {
-    id: "5",
-    name: "Pre-Workout Extreme",
-    slug: "pre-workout-extreme",
-    shortDescription: "Energía explosiva para tus entrenamientos más intensos",
-    category: "fitness",
-    price: 119.90,
-    thumbnail: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=400",
-    stock: 25,
-    status: "active",
-    isFeatured: false,
-    isNewArrival: true,
-    isBestSeller: false,
-  },
-  {
-    id: "6",
-    name: "Multivitamínico Daily",
-    slug: "multivitaminico-daily",
-    shortDescription: "Complejo vitamínico completo para el día a día",
-    category: "bienestar",
-    price: 59.90,
-    thumbnail: "https://images.unsplash.com/photo-1550572017-edd951b55104?w=400",
-    stock: 60,
-    status: "active",
-    isFeatured: true,
-    isNewArrival: false,
-    isBestSeller: true,
-  },
-];
+import { useProducts } from "@/features/catalog";
+import type { ProductCategory } from "@/entities/product";
+import { Search, SlidersHorizontal, X, ChevronDown, RefreshCw } from "lucide-react";
 
 const categories: { value: ProductCategory | "all"; label: string }[] = [
   { value: "all", label: "Todos" },
@@ -116,6 +28,8 @@ function ShopContent() {
   const searchParams = useSearchParams();
   const categoryParam = searchParams.get("category") as ProductCategory | null;
 
+  const { products, isLoading, error, updateFilters, clearFilters, loadProducts } = useProducts();
+
   const [selectedCategory, setSelectedCategory] = useState<ProductCategory | "all">(
     categoryParam || "all"
   );
@@ -124,32 +38,68 @@ function ShopContent() {
   const [showFilters, setShowFilters] = useState(false);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 500]);
 
-  // Filter products
-  const filteredProducts = mockProducts.filter((product) => {
-    const matchesCategory =
-      selectedCategory === "all" || product.category === selectedCategory;
-    const matchesSearch =
-      product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.shortDescription.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesPrice =
-      product.price >= priceRange[0] && product.price <= priceRange[1];
-
-    return matchesCategory && matchesSearch && matchesPrice;
-  });
-
-  // Sort products
-  const sortedProducts = [...filteredProducts].sort((a, b) => {
-    switch (sortBy) {
-      case "price-asc":
-        return a.price - b.price;
-      case "price-desc":
-        return b.price - a.price;
-      case "popular":
-        return (b.isBestSeller ? 1 : 0) - (a.isBestSeller ? 1 : 0);
-      default:
-        return 0;
+  // Update filters when category changes
+  useEffect(() => {
+    if (selectedCategory !== "all") {
+      updateFilters({ category: selectedCategory, status: "active" });
+    } else {
+      updateFilters({ category: undefined, status: "active" });
     }
-  });
+  }, [selectedCategory, updateFilters]);
+
+  // Local filtering for search (since Firebase doesn't support full-text search)
+  const filteredProducts = useMemo(() => {
+    let result = products.filter((product) => product.status === "active");
+
+    // Search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter(
+        (product) =>
+          product.name.toLowerCase().includes(query) ||
+          product.shortDescription.toLowerCase().includes(query)
+      );
+    }
+
+    // Price filter
+    result = result.filter(
+      (product) =>
+        product.price >= priceRange[0] && product.price <= priceRange[1]
+    );
+
+    return result;
+  }, [products, searchQuery, priceRange]);
+
+  // Sort products locally
+  const sortedProducts = useMemo(() => {
+    return [...filteredProducts].sort((a, b) => {
+      switch (sortBy) {
+        case "price-asc":
+          return a.price - b.price;
+        case "price-desc":
+          return b.price - a.price;
+        case "popular":
+          return (b.isBestSeller ? 1 : 0) - (a.isBestSeller ? 1 : 0);
+        default:
+          return 0;
+      }
+    });
+  }, [filteredProducts, sortBy]);
+
+  const handleCategoryChange = (category: ProductCategory | "all") => {
+    setSelectedCategory(category);
+  };
+
+  const handleClearFilters = () => {
+    setSelectedCategory("all");
+    setSearchQuery("");
+    setPriceRange([0, 500]);
+    clearFilters();
+  };
+
+  const handleRefresh = () => {
+    loadProducts(1);
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -186,7 +136,7 @@ function ShopContent() {
                   {categories.map((cat) => (
                     <button
                       key={cat.value}
-                      onClick={() => setSelectedCategory(cat.value)}
+                      onClick={() => handleCategoryChange(cat.value)}
                       className={cn(
                         "w-full text-left px-4 py-2 rounded-lg transition-colors",
                         selectedCategory === cat.value
@@ -225,6 +175,17 @@ function ShopContent() {
                   />
                 </div>
               </div>
+
+              {/* Refresh Button */}
+              <Button
+                variant="outline"
+                onClick={handleRefresh}
+                disabled={isLoading}
+                fullWidth
+              >
+                <RefreshCw className={cn("w-4 h-4 mr-2", isLoading && "animate-spin")} />
+                Actualizar
+              </Button>
             </div>
           </aside>
 
@@ -242,7 +203,7 @@ function ShopContent() {
                 </button>
 
                 <p className="text-sm text-sage">
-                  {sortedProducts.length} productos
+                  {isLoading ? "Cargando..." : `${sortedProducts.length} productos`}
                 </p>
               </div>
 
@@ -288,7 +249,7 @@ function ShopContent() {
                   {categories.map((cat) => (
                     <button
                       key={cat.value}
-                      onClick={() => setSelectedCategory(cat.value)}
+                      onClick={() => handleCategoryChange(cat.value)}
                       className={cn(
                         "px-3 py-1.5 rounded-full text-sm transition-colors",
                         selectedCategory === cat.value
@@ -303,6 +264,19 @@ function ShopContent() {
               </div>
             )}
 
+            {/* Error Message */}
+            {error && (
+              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+                <p>{error}</p>
+                <button
+                  onClick={handleRefresh}
+                  className="mt-2 text-sm underline hover:no-underline"
+                >
+                  Intentar de nuevo
+                </button>
+              </div>
+            )}
+
             {/* Active Filters */}
             {(selectedCategory !== "all" || searchQuery) && (
               <div className="flex flex-wrap items-center gap-2 mb-6">
@@ -311,7 +285,7 @@ function ShopContent() {
                   <Badge
                     variant="primary"
                     className="cursor-pointer"
-                    onClick={() => setSelectedCategory("all")}
+                    onClick={() => handleCategoryChange("all")}
                   >
                     {categories.find((c) => c.value === selectedCategory)?.label}
                     <X className="w-3 h-3 ml-1" />
@@ -328,11 +302,7 @@ function ShopContent() {
                   </Badge>
                 )}
                 <button
-                  onClick={() => {
-                    setSelectedCategory("all");
-                    setSearchQuery("");
-                    setPriceRange([0, 500]);
-                  }}
+                  onClick={handleClearFilters}
                   className="text-sm text-primary hover:underline"
                 >
                   Limpiar todo
@@ -343,8 +313,13 @@ function ShopContent() {
             {/* Products Grid */}
             <ProductGrid
               products={sortedProducts}
+              isLoading={isLoading}
               columns={3}
-              emptyMessage="No se encontraron productos con los filtros seleccionados"
+              emptyMessage={
+                products.length === 0 && !isLoading
+                  ? "Aún no hay productos disponibles. ¡Vuelve pronto!"
+                  : "No se encontraron productos con los filtros seleccionados"
+              }
             />
           </div>
         </div>

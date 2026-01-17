@@ -25,3 +25,13 @@ export {
   type UploadOptions,
   type UploadResult,
 } from "./storage.service";
+
+export {
+  FirebaseUserRepository,
+  getUserRepository,
+} from "./user.repository";
+
+export {
+  FirebaseBlogRepository,
+  getBlogRepository,
+} from "./blog.repository";

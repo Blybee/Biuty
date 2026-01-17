@@ -103,7 +103,7 @@ service cloud.firestore {
     // ==========================================
     // BLOG POSTS
     // ==========================================
-    match /blogPosts/{postId} {
+    match /blog_posts/{postId} {
       // Cualquiera puede leer posts publicados
       allow read: if resource.data.status == 'published' || isAdmin();
       

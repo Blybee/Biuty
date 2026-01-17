@@ -40,6 +40,22 @@ export class FirebaseProductRepository implements IProductRepository {
   }
 
   /**
+   * Convierte Timestamp de Firestore a Date
+   */
+  private convertTimestamp(timestamp: unknown): Date | undefined {
+    if (!timestamp) return undefined;
+    // Check if it's a Firestore Timestamp
+    if (typeof timestamp === 'object' && timestamp !== null && 'toDate' in timestamp) {
+      return (timestamp as { toDate: () => Date }).toDate();
+    }
+    // If it's already a Date
+    if (timestamp instanceof Date) return timestamp;
+    // If it's a number (milliseconds)
+    if (typeof timestamp === 'number') return new Date(timestamp);
+    return undefined;
+  }
+
+  /**
    * Convierte documento de Firestore a Product
    */
   private docToProduct(doc: { id: string; data: () => Record<string, unknown> }): Product {

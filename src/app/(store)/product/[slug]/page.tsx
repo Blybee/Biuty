@@ -1,18 +1,20 @@
 import { ProductDetail } from "./product-detail";
 
-// Genera los parámetros estáticos para export
+// Para build estático con output: export
+// Todos los slugs deben estar listados aquí
 export async function generateStaticParams() {
-  // En producción: fetch desde Firebase/API
+  // Slugs de los productos en Firestore
   const slugs = [
     "proteina-whey-premium",
+    "miel-abeja-pura", 
     "creatina-monohidratada",
-    "miel-organica-premium",
-    "aceite-coco-virgen",
+    "algarrobina-natural",
     "pre-workout-extreme",
-    "bcaa-amino-recovery",
-    "glutamina-pure",
+    "multivitaminico-daily",
     "omega-3-fish-oil",
+    "colageno-hidrolizado-premium",
   ];
+  
   return slugs.map((slug) => ({ slug }));
 }
 

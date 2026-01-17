@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { cn } from "@/shared/lib";
 import { siteConfig } from "@/shared/config";
@@ -56,8 +57,17 @@ export default function AdminLayout({
         <div className="flex flex-col h-full">
           {/* Logo */}
           <div className="flex items-center justify-between px-6 py-5 border-b border-forest-light">
-            <Link href="/admin" className="text-xl font-display font-bold text-white">
-              <span className="text-primary">●</span> {siteConfig.name}
+            <Link href="/admin" className="flex items-center gap-3">
+              <Image
+                src="/logo.svg"
+                alt={siteConfig.name}
+                width={40}
+                height={40}
+                className="w-10 h-10"
+              />
+              <span className="text-xl font-display font-bold text-white">
+                {siteConfig.name}
+              </span>
             </Link>
             <button
               onClick={() => setSidebarOpen(false)}

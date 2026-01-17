@@ -106,6 +106,7 @@ export default function HomePage() {
         description="Descubre nuestra selección premium de suplementos deportivos y productos naturales para potenciar tu salud y bienestar."
         primaryAction={{ label: "Explorar Tienda", href: "/shop" }}
         secondaryAction={{ label: "Blog Biuty", href: "/blog" }}
+        image="/images/fondo.png"
         height="lg"
       />
 
