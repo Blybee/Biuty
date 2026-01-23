@@ -9,7 +9,8 @@
     "lint": "next lint",
     "format": "prettier --write .",
     "deploy": "npm run build && firebase deploy --only hosting",
-    "seed:products": "tsx scripts/seed-product.ts"
+    "seed:products": "tsx scripts/seed-product.ts",
+    "create:admin": "tsx scripts/create-admin-user.ts"
   },
   "dependencies": {
     "autoprefixer": "^10.4.23",

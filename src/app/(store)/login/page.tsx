@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -11,19 +11,13 @@ import { Mail, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
 export default function LoginPage() {
   const router = useRouter();
   const { signIn, isLoading, error, isAuthenticated } = useAuth();
-  
+
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
   const [showPassword, setShowPassword] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
-
-  // Redirigir si ya está autenticado
-  if (isAuthenticated) {
-    router.push("/");
-    return null;
-  }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -46,8 +40,13 @@ export default function LoginPage() {
       password: formData.password,
     });
 
-    if (result.success) {
-      router.push("/");
+    if (result.success && result.user) {
+      // Redirigir según el rol del usuario
+      if (result.user.role === "admin" || result.user.role === "super_admin") {
+        router.push("/admin");
+      } else {
+        router.push("/");
+      }
     } else {
       // Traducir errores comunes de Firebase
       const errorMessage = translateFirebaseError(result.error || "");
@@ -258,8 +257,11 @@ function translateFirebaseError(error: string): string {
     "auth/invalid-email": "El correo electrónico no es válido",
     "auth/user-disabled": "Esta cuenta ha sido deshabilitada",
     "auth/too-many-requests": "Demasiados intentos. Por favor espera unos minutos",
-    "auth/invalid-credential": "Credenciales inválidas. Verifica tu email y contraseña",
+    "auth/invalid-credential": "Credenciales incorrectas. Verifica tu email y contraseña",
     "auth/network-request-failed": "Error de conexión. Verifica tu internet",
+    "auth/operation-not-allowed": "Esta operación no está permitida",
+    "auth/email-already-in-use": "Ya existe una cuenta con este correo electrónico",
+    "auth/weak-password": "La contraseña debe tener al menos 6 caracteres",
   };
 
   for (const [key, message] of Object.entries(errorMap)) {
@@ -270,3 +272,4 @@ function translateFirebaseError(error: string): string {
 
   return "Error al iniciar sesión. Por favor intenta de nuevo.";
 }
+

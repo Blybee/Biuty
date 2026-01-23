@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -11,7 +11,7 @@ import { Mail, Lock, Eye, EyeOff, Loader2, User, Check } from "lucide-react";
 export default function SignUpPage() {
   const router = useRouter();
   const { signUp, isLoading, error, isAuthenticated } = useAuth();
-  
+
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -23,12 +23,6 @@ export default function SignUpPage() {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
-
-  // Redirigir si ya está autenticado
-  if (isAuthenticated) {
-    router.push("/");
-    return null;
-  }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -260,15 +254,14 @@ export default function SignUpPage() {
                     {[1, 2, 3, 4, 5].map((level) => (
                       <div
                         key={level}
-                        className={`h-1 flex-1 rounded-full transition-colors ${
-                          level <= passwordStrength.strength
-                            ? level <= 2
-                              ? "bg-red-400"
-                              : level <= 3
+                        className={`h-1 flex-1 rounded-full transition-colors ${level <= passwordStrength.strength
+                          ? level <= 2
+                            ? "bg-red-400"
+                            : level <= 3
                               ? "bg-yellow-400"
                               : "bg-green-400"
-                            : "bg-sage/20"
-                        }`}
+                          : "bg-sage/20"
+                          }`}
                       />
                     ))}
                   </div>
@@ -377,9 +370,10 @@ function translateFirebaseError(error: string): string {
   const errorMap: Record<string, string> = {
     "auth/email-already-in-use": "Ya existe una cuenta con este correo electrónico",
     "auth/invalid-email": "El correo electrónico no es válido",
-    "auth/weak-password": "La contraseña es demasiado débil",
+    "auth/weak-password": "La contraseña debe tener al menos 6 caracteres",
     "auth/operation-not-allowed": "El registro está temporalmente deshabilitado",
     "auth/network-request-failed": "Error de conexión. Verifica tu internet",
+    "auth/too-many-requests": "Demasiados intentos. Por favor espera unos minutos",
   };
 
   for (const [key, message] of Object.entries(errorMap)) {

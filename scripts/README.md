@@ -90,7 +90,88 @@ npm run seed:products
    3. Puedes editar los productos desde el panel admin
 ```
 
-## Crear Scripts Personalizados
+## create-admin-user.ts
+
+Crea usuarios administradores con permisos especiales usando Firebase Admin SDK y Custom Claims.
+
+**Uso:**
+
+```bash
+npm run create:admin
+```
+
+El script te pedirá:
+- 📧 **Correo electrónico**: Email del administrador
+- 🔑 **Contraseña**: Mínimo 6 caracteres (recomendado 8+)
+- 👤 **Nombre completo**: Para el perfil del usuario
+
+**Lo que hace el script:**
+
+1. ✅ Verifica si el usuario ya existe
+   - Si existe: Actualiza contraseña y permisos
+   - Si no existe: Crea nuevo usuario
+2. ✅ Establece **Custom Claims** con `{ role: "admin" }`
+3. ✅ Crea/actualiza documento en Firestore con role: "admin"
+4. ✅ Activa el estado del usuario como "active"
+
+### Ejemplo de salida
+
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔐 BIUTY - Creador de Usuarios Administradores
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 Proyecto: biuty-12345
+
+📧 Correo electrónico del administrador: admin@biuty.com
+🔑 Contraseña (mínimo 6 caracteres): ********
+👤 Nombre completo del administrador: Juan Administrador
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⏳ Procesando...
+
+📝 Creando nuevo usuario...
+✅ Usuario creado: abc123xyz
+🔐 Estableciendo permisos de administrador...
+✅ Custom claims establecidos: { role: 'admin' }
+💾 Actualizando documento en Firestore...
+✅ Documento de usuario actualizado en Firestore
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎉 ¡Proceso completado exitosamente!
+
+📊 Resumen:
+   👤 Usuario: admin@biuty.com
+   🆔 UID: abc123xyz
+   👑 Rol: admin
+   📝 Tipo: Nuevo usuario
+
+🔗 Próximos pasos:
+   1. Inicia sesión con estas credenciales
+   2. Ve a /admin para acceder al panel de administración
+   3. El usuario deberá cerrar sesión y volver a iniciar para que los claims surtan efecto
+```
+
+### ⚠️ Notas Importantes
+
+1. **Reiniciar Sesión**: Si actualizas un usuario que ya está logueado, debe cerrar sesión y volver a iniciar para que los nuevos permisos surtan efecto.
+
+2. **Custom Claims vs Firestore**: 
+   - Los **custom claims** se almacenan en el token de autenticación (más rápido y seguro)
+   - El rol en **Firestore** es para respaldo y consultas
+
+3. **Seguridad**: 
+   - Solo usuarios con custom claims `role: "admin"` pueden acceder a `/admin`
+   - Las Firestore Rules verifican tanto claims como documentos
+
+4. **Usuarios Existentes**: Si tienes usuarios admin antiguos en Firestore pero sin custom claims, ejecuta el script para actualizarlos.
+
+5. **Verificar Creación**:
+   - Firebase Console → Authentication → Busca el usuario
+   - Firestore → Collection `users` → Verifica `role: "admin"`
+   - Inicia sesión y ve a `/admin`
+
+
 
 Puedes usar `seed-product.ts` como plantilla:
 

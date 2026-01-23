@@ -169,19 +169,79 @@ export class FirebaseAuthService {
   }
 
   /**
-   * Verifica si el usuario tiene un rol específico
+   * Obtiene el rol del usuario desde sus custom claims
    */
-  async hasRole(userId: string, role: User["role"]): Promise<boolean> {
-    const user = await this.getUserDocument(userId);
-    return user?.role === role;
+  async getUserRole(userId: string): Promise<User["role"] | null> {
+    try {
+      const firebaseUser = this.auth.currentUser;
+      if (!firebaseUser || firebaseUser.uid !== userId) {
+        return null;
+      }
+
+      const idTokenResult = await firebaseUser.getIdTokenResult();
+      const customClaims = idTokenResult.claims;
+
+      // Verificar custom claims primero
+      if (customClaims.role) {
+        return customClaims.role as User["role"];
+      }
+
+      // Fallback a Firestore si no hay custom claims
+      const user = await this.getUserDocument(userId);
+      return user?.role || null;
+    } catch (error) {
+      console.error("Error getting user role:", error);
+      return null;
+    }
   }
 
   /**
-   * Verifica si el usuario es administrador
+   * Fuerza la actualización del token de ID para obtener claims actualizados
+   */
+  async refreshUserToken(): Promise<void> {
+    const firebaseUser = this.auth.currentUser;
+    if (!firebaseUser) {
+      throw new Error("No authenticated user");
+    }
+    await firebaseUser.getIdToken(true); // Force refresh
+  }
+
+  /**
+   * Obtiene el usuario actual con sus custom claims
+   */
+  async getCurrentUserWithClaims(): Promise<{
+    user: User | null;
+    claims: Record<string, any>;
+  }> {
+    const firebaseUser = this.auth.currentUser;
+
+    if (!firebaseUser) {
+      return { user: null, claims: {} };
+    }
+
+    const idTokenResult = await firebaseUser.getIdTokenResult();
+    const user = await this.getUserDocument(firebaseUser.uid);
+
+    return {
+      user,
+      claims: idTokenResult.claims,
+    };
+  }
+
+  /**
+   * Verifica si el usuario tiene un rol específico usando custom claims
+   */
+  async hasRole(userId: string, role: User["role"]): Promise<boolean> {
+    const userRole = await this.getUserRole(userId);
+    return userRole === role;
+  }
+
+  /**
+   * Verifica si el usuario es administrador usando custom claims
    */
   async isAdmin(userId: string): Promise<boolean> {
-    const user = await this.getUserDocument(userId);
-    return user?.role === "admin" || user?.role === "super_admin";
+    const userRole = await this.getUserRole(userId);
+    return userRole === "admin" || userRole === "super_admin";
   }
 }
 
