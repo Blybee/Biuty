@@ -19,12 +19,12 @@ export type ProductStatus = "active" | "inactive" | "out_of_stock";
  */
 export interface NutritionalInfo {
   servingSize: string;
-  calories?: number;
-  protein?: number;
-  carbs?: number;
-  fat?: number;
-  fiber?: number;
-  sugar?: number;
+  calories?: number | null;
+  protein?: number | null;
+  carbs?: number | null;
+  fat?: number | null;
+  fiber?: number | null;
+  sugar?: number | null;
 }
 
 /**
@@ -35,7 +35,7 @@ export interface ProductVariant {
   name: string;
   sku: string;
   price: number;
-  compareAtPrice?: number;
+  compareAtPrice?: number | null;
   stock: number;
   attributes: Record<string, string>;
 }
@@ -50,41 +50,41 @@ export interface Product {
   description: string;
   shortDescription: string;
   category: ProductCategory;
-  subcategory?: string;
-  
+  subcategory?: string | null;
+
   // Precios
   price: number;
-  compareAtPrice?: number;
-  
+  compareAtPrice?: number | null;
+
   // Inventario
   sku: string;
   stock: number;
   lowStockThreshold: number;
   status: ProductStatus;
-  
+
   // Media
   images: string[];
   thumbnail: string;
-  
+
   // Detalles
-  ingredients?: string[];
+  ingredients?: string[] | null;
   benefits: string[];
-  howToUse?: string;
-  nutritionalInfo?: NutritionalInfo;
-  
+  howToUse?: string | null;
+  nutritionalInfo?: NutritionalInfo | null;
+
   // Variantes
-  variants?: ProductVariant[];
-  
+  variants?: ProductVariant[] | null;
+
   // SEO
-  metaTitle?: string;
-  metaDescription?: string;
-  
+  metaTitle?: string | null;
+  metaDescription?: string | null;
+
   // Tags y filtros
   tags: string[];
   isFeatured: boolean;
   isNewArrival: boolean;
   isBestSeller: boolean;
-  
+
   // Timestamps
   createdAt: Timestamp;
   updatedAt: Timestamp;
@@ -100,7 +100,7 @@ export interface ProductListItem {
   shortDescription: string;
   category: ProductCategory;
   price: number;
-  compareAtPrice?: number;
+  compareAtPrice?: number | null;
   thumbnail: string;
   stock: number;
   status: ProductStatus;

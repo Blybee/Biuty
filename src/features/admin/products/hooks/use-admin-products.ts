@@ -39,6 +39,23 @@ export function useAdminProducts() {
   const storageService = getStorageService();
 
   /**
+   * Limpia el payload de undefined para Firestore
+   */
+  const sanitizePayload = <T extends Record<string, any>>(data: T): T => {
+    const clean: any = { ...data };
+    Object.keys(clean).forEach((key) => {
+      if (clean[key] === undefined) {
+        clean[key] = null;
+      } else if (typeof clean[key] === 'object' && clean[key] !== null && !Array.isArray(clean[key])) {
+        // Recursivamente limpiar objetos anidados (como nutritionalInfo)
+        // Ignorar objetos especiales como File o Date si los hubiera (aquí asumimos DTOs planos)
+        clean[key] = sanitizePayload(clean[key]);
+      }
+    });
+    return clean as T;
+  };
+
+  /**
    * Carga lista de productos con filtros y paginación
    */
   const loadProducts = useCallback(
@@ -126,11 +143,11 @@ export function useAdminProducts() {
           }
         }
 
-        const productData: CreateProductDTO = {
+        const productData: CreateProductDTO = sanitizePayload({
           ...data,
           images,
           thumbnail,
-        };
+        });
 
         const newProduct = await repository.create(productData);
 
@@ -195,11 +212,11 @@ export function useAdminProducts() {
           }
         }
 
-        const updateData: UpdateProductDTO = {
+        const updateData: UpdateProductDTO = sanitizePayload({
           ...data,
           ...(images && { images }),
           ...(thumbnail && { thumbnail }),
-        };
+        });
 
         const updatedProduct = await repository.update(id, updateData);
 
@@ -209,20 +226,20 @@ export function useAdminProducts() {
           products: prev.products.map((p) =>
             p.id === id
               ? {
-                  id: updatedProduct.id,
-                  name: updatedProduct.name,
-                  slug: updatedProduct.slug,
-                  shortDescription: updatedProduct.shortDescription,
-                  category: updatedProduct.category,
-                  price: updatedProduct.price,
-                  compareAtPrice: updatedProduct.compareAtPrice,
-                  thumbnail: updatedProduct.thumbnail,
-                  stock: updatedProduct.stock,
-                  status: updatedProduct.status,
-                  isFeatured: updatedProduct.isFeatured,
-                  isNewArrival: updatedProduct.isNewArrival,
-                  isBestSeller: updatedProduct.isBestSeller,
-                }
+                id: updatedProduct.id,
+                name: updatedProduct.name,
+                slug: updatedProduct.slug,
+                shortDescription: updatedProduct.shortDescription,
+                category: updatedProduct.category,
+                price: updatedProduct.price,
+                compareAtPrice: updatedProduct.compareAtPrice,
+                thumbnail: updatedProduct.thumbnail,
+                stock: updatedProduct.stock,
+                status: updatedProduct.status,
+                isFeatured: updatedProduct.isFeatured,
+                isNewArrival: updatedProduct.isNewArrival,
+                isBestSeller: updatedProduct.isBestSeller,
+              }
               : p
           ),
           selectedProduct: updatedProduct,
